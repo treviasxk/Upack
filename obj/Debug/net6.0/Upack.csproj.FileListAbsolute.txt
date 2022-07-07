@@ -1,0 +1,15 @@
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.csproj.AssemblyReference.cache
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.AssemblyInfoInputs.cache
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.AssemblyInfo.cs
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.csproj.CoreCompileInputs.cache
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\bin\Debug\net6.0\Upack.exe
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\bin\Debug\net6.0\Upack.deps.json
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\bin\Debug\net6.0\Upack.runtimeconfig.json
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\bin\Debug\net6.0\Upack.dll
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\bin\Debug\net6.0\Upack.pdb
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.dll
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\refint\Upack.dll
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.pdb
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\Upack.genruntimeconfig.cache
+C:\Users\trevi\OneDrive\Documentos\Github\Upack\obj\Debug\net6.0\ref\Upack.dll
