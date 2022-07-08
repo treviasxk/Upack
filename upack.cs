@@ -1,29 +1,29 @@
+using System.Net;
+
 namespace Upack{
     public enum StatusFile {Verifying, Downloading, Updated, Failed}
     public class upack{
-        public static Action<string, StatusFile, int> OnUpackStatus;
-
-        public static Action OnErrorUpdate;
+        public static Action<string, StatusFile, int, int, string> OnUpackStatus;
         public static Action<string> OnUpdateCompleted;
+        public static Action OnErrorUpdate;
         static HttpClient webClient = new HttpClient();
+        
         static string version, urlAsset;
         static bool pass = true;
-        static int progress;
-
         public static void CreateManifest(string PathFiles, string URLFolder, string Version = ""){
             if(!PathFiles.EndsWith("/"))
                 PathFiles += "/";
             PathFiles.Replace("\\","/");
 
             string data = "UPACK" + Environment.NewLine;
-            data += Version + Environment.NewLine;
-            data += URLFolder + Environment.NewLine;
+            data += "version=" + Version + Environment.NewLine;
+            data += "urlpath=" + URLFolder + Environment.NewLine;
 
             if(!Directory.Exists(PathFiles))
                 Directory.CreateDirectory(PathFiles);
 
             var files = Directory.GetFiles(PathFiles, "*.*", SearchOption.AllDirectories);
-            data += files.Count() + Environment.NewLine;
+            data += "total=" + files.Count() + Environment.NewLine;
             data += Environment.NewLine;
             foreach (string file in files) {
                 data += file.Replace("\\","/") + Environment.NewLine;
@@ -39,14 +39,17 @@ namespace Upack{
 
         public static async Task UpdateFilesAsync(string URL){
             try{
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                dwfiles.Clear();
+                dwsizes.Clear();
                 var data = webClient.GetStringAsync(URL);
                 string[] result = data.Result.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
                 if(result[0] == "UPACK"){
-                    version = result[1];
-                    urlAsset = result[2];
+                    version = result[1].Replace("version=","");
+                    urlAsset = result[2].Replace("urlpath=","");
                     if(!urlAsset.EndsWith("/"))
                         urlAsset += "/";
-                    int totalfiles = Convert.ToInt32(result[3]);
+                    int totalfiles = Convert.ToInt32(result[3].Replace("total=",""));
                     string[] files = new string[totalfiles];
                     string[] sizes = new string[totalfiles];
 
@@ -61,43 +64,63 @@ namespace Upack{
             }
         }
 
+        static List<string> dwfiles = new List<string>();
+        static List<string> dwsizes = new List<string>();
         static async Task CheckFilesAsync(string[] files, string[] sizes){
             pass = true;
             for(int i = 0; i < files.Length; i++){
-                progress = (100 / files.Length) * (i + 1);
-                OnUpackStatus?.Invoke(files[i], StatusFile.Verifying, progress);
+                OnUpackStatus?.Invoke(files[i], StatusFile.Verifying, i, files.Length - 1, GetSizeShow(sizes[i]));
                 if(File.Exists(files[i])){
                     if(new FileInfo(files[i]).Length != Convert.ToInt32(sizes[i])){
-                        await DownloadFileAsync(files[i]);
+                        dwfiles.Add(files[i]);
+                        dwsizes.Add(sizes[i]);
                     }
                 }else{
-                    await DownloadFileAsync(files[i]);
+                    dwfiles.Add(files[i]);
+                    dwsizes.Add(sizes[i]);
                 }
             }
-            progress = 100;
+            await DownloadFileAsync();
+        }
+
+        static async Task DownloadFileAsync(){
+            int i = 0;
+            foreach(string filename in dwfiles){
+                i++;
+                OnUpackStatus?.Invoke(filename, StatusFile.Downloading, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                HttpResponseMessage response = await webClient.GetAsync(urlAsset + filename);
+                if (response.IsSuccessStatusCode){
+                    try{
+                        var _bytes = await webClient.GetByteArrayAsync(urlAsset + filename);
+                        new FileInfo(filename).Directory.Create();
+                        File.WriteAllBytes(filename, _bytes);
+                        OnUpackStatus?.Invoke(filename, StatusFile.Updated, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                    }catch{
+                        pass = false;
+                        OnUpackStatus?.Invoke(filename, StatusFile.Failed, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                    }
+                }else{
+                    pass = false;
+                    OnUpackStatus?.Invoke(filename, StatusFile.Failed, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                }
+            }
             if(!pass)
                 OnErrorUpdate?.Invoke();
             else
                 OnUpdateCompleted?.Invoke(version);
         }
 
-        static async Task DownloadFileAsync(string filename){
-            OnUpackStatus?.Invoke(filename, StatusFile.Downloading, progress);
-            HttpResponseMessage response = await webClient.GetAsync(urlAsset + filename);
-            Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
-            if (response.IsSuccessStatusCode){
-                try{
-                    byte[] fileBytes = await webClient.GetByteArrayAsync(urlAsset + filename);
-                    new FileInfo(filename).Directory.Create();
-                    File.WriteAllBytes(filename, fileBytes);
-                    OnUpackStatus?.Invoke(filename, StatusFile.Updated, progress);
-                }catch{
-                    pass = false;
-                }
-            }else{
-                pass = false;
-                OnUpackStatus?.Invoke(filename, StatusFile.Failed, progress);
-            } 
+        static string GetSizeShow(string _size){
+            int PacketsReceived = Convert.ToInt32(_size);
+            if(PacketsReceived > 1024000000)
+            return (PacketsReceived / 1024000000).ToString("0") + "GB";
+            if(PacketsReceived > 1024000)
+            return (PacketsReceived / 1024000).ToString("0") + "MB";
+            if(PacketsReceived > 1024)
+            return (PacketsReceived / 1024).ToString("0") + "KB";
+            if(PacketsReceived < 1024)
+            return (PacketsReceived).ToString("0") + "Bytes";
+            return "";
         }
     }
 }
