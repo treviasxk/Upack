@@ -35,7 +35,7 @@ namespace Upack{
         }
 
         public static async Task UpdateFilesAsync(string PATH, string URL){
-            try{
+
                 if(!PATH.EndsWith("/"))
                     PATH += "/";
                 pathFiles = PATH.Replace("\\","/");
@@ -60,9 +60,7 @@ namespace Upack{
                 }else{
                     OnErrorUpdate?.Invoke();
                 }
-            }catch{
-                OnErrorUpdate?.Invoke();
-            }
+
         }
 
         static List<string> dwfiles = new List<string>();
@@ -71,7 +69,7 @@ namespace Upack{
             for(int i = 0; i < files.Length; i++){
                 OnUpackStatus?.Invoke(files[i], StatusFile.Verifying, i, files.Length - 1, GetSizeShow(sizes[i]));
                 if(File.Exists(pathFiles + files[i])){
-                    if(new FileInfo(files[i]).Length != Convert.ToInt32(sizes[i])){
+                    if(new FileInfo(pathFiles + files[i]).Length != Convert.ToInt32(sizes[i])){
                         dwfiles.Add(files[i]);
                         dwsizes.Add(sizes[i]);
                     }
