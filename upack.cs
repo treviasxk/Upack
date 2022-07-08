@@ -9,22 +9,21 @@ namespace Upack{
         static HttpClient webClient = new HttpClient();
         
         static string version, urlAsset, pathFiles;
-        static bool pass = true;
         public static void CreateManifest(string PathFiles, string URLFolder, string Version = ""){
-            PathFiles = PathFiles.Replace(Path.GetDirectoryName(PathFiles) + "/","");
-            if(!PathFiles.EndsWith("/"))
-                PathFiles += "/";
-            PathFiles.Replace("\\","/");
+            var fullpath =  Path.GetFullPath(PathFiles);
+            PathFiles = Path.GetFullPath(PathFiles);
+            PathFiles = PathFiles.Replace(Path.GetDirectoryName(PathFiles) + "\\","");
 
             string data = "UPACK" + Environment.NewLine;
             data += "version=" + Version + Environment.NewLine;
             data += "urlpath=" + URLFolder + Environment.NewLine;
 
-            var files = Directory.GetFiles(PathFiles, "*.*", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(fullpath, "*.*", SearchOption.AllDirectories);
             data += "total=" + files.Count() + Environment.NewLine;
             data += Environment.NewLine;
             foreach (string file in files) {
-                data += file.Replace("\\","/") + Environment.NewLine;
+                var xx = Path.GetFullPath(file);
+                data += PathFiles + xx.Replace(fullpath,"").Replace("\\","/") + Environment.NewLine;
             }
             data += Environment.NewLine;
 
@@ -69,7 +68,6 @@ namespace Upack{
         static List<string> dwfiles = new List<string>();
         static List<string> dwsizes = new List<string>();
         static async Task CheckFilesAsync(string[] files, string[] sizes){
-            pass = true;
             for(int i = 0; i < files.Length; i++){
                 OnUpackStatus?.Invoke(files[i], StatusFile.Verifying, i, files.Length - 1, GetSizeShow(sizes[i]));
                 if(File.Exists(pathFiles + files[i])){
@@ -86,26 +84,26 @@ namespace Upack{
         }
 
         static async Task DownloadFileAsync(){
-            int i = 0;
-            foreach(string filename in dwfiles){
-                i++;
-                OnUpackStatus?.Invoke(filename, StatusFile.Downloading, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
-                HttpResponseMessage response = await webClient.GetAsync(urlAsset + filename);
+            bool pass = true;
+            for(int i = 0; i < dwfiles.Count; i++){
+                OnUpackStatus?.Invoke(dwfiles[i], StatusFile.Downloading, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                HttpResponseMessage response = await webClient.GetAsync(urlAsset + dwfiles[i]);
                 if (response.IsSuccessStatusCode){
                     try{
-                        var _bytes = await webClient.GetByteArrayAsync(urlAsset + filename);
-                        new FileInfo(pathFiles + filename).Directory.Create();
-                        File.WriteAllBytes(pathFiles + filename, _bytes);
-                        OnUpackStatus?.Invoke(filename, StatusFile.Updated, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                        var _bytes = await webClient.GetByteArrayAsync(urlAsset + dwfiles[i]);
+                        new FileInfo(pathFiles + dwfiles[i]).Directory.Create();
+                        File.WriteAllBytes(pathFiles + dwfiles[i], _bytes);
+                        OnUpackStatus?.Invoke(dwfiles[i], StatusFile.Updated, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
                     }catch{
                         pass = false;
-                        OnUpackStatus?.Invoke(filename, StatusFile.Failed, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                        OnUpackStatus?.Invoke(dwfiles[i], StatusFile.Failed, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
                     }
                 }else{
                     pass = false;
-                    OnUpackStatus?.Invoke(filename, StatusFile.Failed, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
+                    OnUpackStatus?.Invoke(dwfiles[i], StatusFile.Failed, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
                 }
             }
+
             if(!pass)
                 OnErrorUpdate?.Invoke();
             else
