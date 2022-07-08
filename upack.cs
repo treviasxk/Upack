@@ -8,9 +8,10 @@ namespace Upack{
         public static Action OnErrorUpdate;
         static HttpClient webClient = new HttpClient();
         
-        static string version, urlAsset;
+        static string version, urlAsset, pathFiles;
         static bool pass = true;
         public static void CreateManifest(string PathFiles, string URLFolder, string Version = ""){
+            PathFiles = PathFiles.Replace(Path.GetDirectoryName(PathFiles) + "/","");
             if(!PathFiles.EndsWith("/"))
                 PathFiles += "/";
             PathFiles.Replace("\\","/");
@@ -18,9 +19,6 @@ namespace Upack{
             string data = "UPACK" + Environment.NewLine;
             data += "version=" + Version + Environment.NewLine;
             data += "urlpath=" + URLFolder + Environment.NewLine;
-
-            if(!Directory.Exists(PathFiles))
-                Directory.CreateDirectory(PathFiles);
 
             var files = Directory.GetFiles(PathFiles, "*.*", SearchOption.AllDirectories);
             data += "total=" + files.Count() + Environment.NewLine;
@@ -37,11 +35,15 @@ namespace Upack{
             File.WriteAllText("Manifest.txt", data, System.Text.Encoding.UTF8);
         }
 
-        public static async Task UpdateFilesAsync(string URL){
+        public static async Task UpdateFilesAsync(string PATH, string URL){
             try{
+                if(!PATH.EndsWith("/"))
+                    PATH += "/";
+                pathFiles = PATH.Replace("\\","/");
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                 dwfiles.Clear();
                 dwsizes.Clear();
+
                 var data = webClient.GetStringAsync(URL);
                 string[] result = data.Result.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
                 if(result[0] == "UPACK"){
@@ -70,7 +72,7 @@ namespace Upack{
             pass = true;
             for(int i = 0; i < files.Length; i++){
                 OnUpackStatus?.Invoke(files[i], StatusFile.Verifying, i, files.Length - 1, GetSizeShow(sizes[i]));
-                if(File.Exists(files[i])){
+                if(File.Exists(pathFiles + files[i])){
                     if(new FileInfo(files[i]).Length != Convert.ToInt32(sizes[i])){
                         dwfiles.Add(files[i]);
                         dwsizes.Add(sizes[i]);
@@ -92,8 +94,8 @@ namespace Upack{
                 if (response.IsSuccessStatusCode){
                     try{
                         var _bytes = await webClient.GetByteArrayAsync(urlAsset + filename);
-                        new FileInfo(filename).Directory.Create();
-                        File.WriteAllBytes(filename, _bytes);
+                        new FileInfo(pathFiles + filename).Directory.Create();
+                        File.WriteAllBytes(pathFiles + filename, _bytes);
                         OnUpackStatus?.Invoke(filename, StatusFile.Updated, i, dwfiles.Count - 1, GetSizeShow(dwsizes[i]));
                     }catch{
                         pass = false;

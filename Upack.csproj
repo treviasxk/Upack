@@ -10,7 +10,7 @@
     <Company>Trevias Xk</Company>
     <Authors>Trevias Xk</Authors>
     <Product>Upack</Product>
-    <Description>Upack é um gerenciador de arquivos, utilizado para atualizar softwares.</Description>
+    <Description>Upack é um gerenciador de arquivos, utilizado para atualizar arquivos de softwares.</Description>
     <Copyright>Trevias Xk © 2022</Copyright>
     <RootNamespace>Upack</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>

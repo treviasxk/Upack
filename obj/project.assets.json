@@ -183,13 +183,13 @@
     "C:\\Users\\trevi\\.nuget\\packages\\": {}
   },
   "project": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "restore": {
-      "projectUniqueName": "c:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
+      "projectUniqueName": "C:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
       "projectName": "Upack",
-      "projectPath": "c:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
+      "projectPath": "C:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
       "packagesPath": "C:\\Users\\trevi\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\obj\\",
+      "outputPath": "C:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\trevi\\AppData\\Roaming\\NuGet\\NuGet.Config"
