@@ -1,8 +1,8 @@
 ﻿using Upack;
 
-upack.CreateManifest(Environment.CurrentDirectory + "/data", "http://127.0.0.1/data/builds/assets", "1.0.0.0");
-//upack.OnUpackStatus = OnUpackStatus;
-//await upack.UpdateFilesAsync(Environment.CurrentDirectory, "http://127.0.0.1/data/builds/Manifest.txt");
+//upack.CreateManifest(Environment.CurrentDirectory + "/data", "http://127.0.0.1/data/builds/assets", "1.0.0.0");
+upack.OnUpackStatus = OnUpackStatus;
+await upack.UpdateFilesAsync(Environment.CurrentDirectory, "http://127.0.0.1/data/builds/Manifest.txt");
 Console.ReadKey();
 
 
