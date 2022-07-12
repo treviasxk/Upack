@@ -2,13 +2,11 @@
 // Redes sociais:       treviasxk
 // Github:              https://github.com/treviasxk
 
-using Upack;
-
-upack.OnUpackStatus = OnUpackStatus;
-upack.OnUpdateCompleted = OnCompleted;
-upack.OnErrorUpdate = OnError;
-//upack.CreateManifest("AssetBundles", "http://127.0.0.1/data/builds/android", "1.0.0.0");
-await upack.UpdateFilesAsync(Environment.CurrentDirectory, "http://127.0.0.1/data/builds/Manifest.txt");
+Upack.OnUpackStatus = OnUpackStatus;
+Upack.OnUpdateCompleted = OnCompleted;
+Upack.OnErrorUpdate = OnError;
+await Upack.UpdateFilesAsync(Environment.CurrentDirectory, "http://192.168.0.101/data/builds/Manifest.txt");
+//upack.CreateManifest("AssetBundles", "http://192.168.0.101/data/builds/android", "0.0.1.0 (alpha)");
 Console.ReadKey();
 
 void OnError(){
@@ -20,5 +18,5 @@ void OnCompleted(string _version){
 }
 
 void OnUpackStatus(DownloadInfo _info){
-    Console.WriteLine(_info.Status + " " + _info.filename + " " + _info.progress + "% " + _info.bytesReceived + " " + _info.totalBytes);
+    Console.WriteLine(_info.Status + " " + _info.filename + " " + _info.progress + "%" + " " + (_info.bytesReceived != null ? _info.bytesReceived + "/" + _info.totalBytes : ""));
 }
