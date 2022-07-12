@@ -116,14 +116,13 @@ public class Upack{
                 if(new FileInfo(_location).Length - 1 >= size)
                     File.Delete(_location);
 
-            using(var fileStream = new FileStream(_location, FileMode.Append, FileAccess.Write, FileShare.None, buffer.Length, true)){
-                int index = (int)fileStream.Length <= 0 ? 0 : (int)fileStream.Length - 1;
-                totalBytes = index;
+            using(var fileStream = new FileStream(_location, FileMode.Create, FileAccess.ReadWrite, FileShare.None, buffer.Length, true)){
                 do{
+
                     float x = (100 / (float)dwfile.Count);
                     progress = (int)((x / (float)size) * totalBytes) + (int)(i * x);
                     OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Downloading, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
-                    var bytesRead = await contentStream.ReadAsync(buffer, index, buffer.Length - index);
+                    var bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length);
                     if(bytesRead == 0)
                         continue;
                     await fileStream.WriteAsync(buffer, 0, bytesRead);
@@ -131,9 +130,9 @@ public class Upack{
                 }
                 while (totalBytes < size);
             }
-            if(CalculateMD5(_location) == dwfile.ElementAt(i).Value)
+            if(CalculateMD5(_location) == dwfile.ElementAt(i).Value){
                 OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Updated, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
-            else{
+            }else{
                 pass = false;
                 OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Failed, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
             }
