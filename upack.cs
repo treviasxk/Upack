@@ -112,8 +112,11 @@ public class Upack{
 
             GC.Collect(); 
             GC.WaitForPendingFinalizers();
+            if(File.Exists(_location))
+                if(new FileInfo(_location).Length - 1 >= size)
+                    File.Delete(_location);
 
-            using (var fileStream = new FileStream(_location, FileMode.Append, FileAccess.Write, FileShare.None, buffer.Length, true)){
+            using(var fileStream = new FileStream(_location, FileMode.Append, FileAccess.Write, FileShare.None, buffer.Length, true)){
                 int index = (int)fileStream.Length <= 0 ? 0 : (int)fileStream.Length - 1;
                 totalBytes = index;
                 do{
@@ -128,8 +131,14 @@ public class Upack{
                 }
                 while (totalBytes < size);
             }
-            OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, progress = 100, Status = StatusFile.Updated, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
+            if(CalculateMD5(_location) == dwfile.ElementAt(i).Value)
+                OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Updated, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
+            else{
+                pass = false;
+                OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Failed, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
+            }
         }
+
         if(!pass)
             OnErrorUpdate?.Invoke();
         else
