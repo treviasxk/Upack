@@ -6,7 +6,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-public enum StatusFile {Verifying, Downloading, Updated, Failed}
+public enum StatusFile {Verifying, Downloading, Updated, Failed, Deleting}
 public class DownloadInfo{
     public string filename {get;set;}
     public StatusFile Status {get;set;}
@@ -30,6 +30,7 @@ public class Upack{
     public static Action<DownloadInfo> OnUpackStatus;
     public static Action<UpackManifest> OnUpdateCompleted;
     public static Action OnErrorUpdate;
+    public static Action OnCleanCompleted;
     static Dictionary<string, string> dwfile = new Dictionary<string, string>();
     static Dictionary<string, string> dwlast = new Dictionary<string, string>();
     static HttpClient webClient = new HttpClient();
@@ -65,6 +66,36 @@ public class Upack{
     }
 
     static UpackManifest MyManifest;
+    public static void ClearFiles(string PATH){
+        string fullpath =  Path.GetFullPath(PATH) + "\\";
+        GC.Collect(); 
+        GC.WaitForPendingFinalizers();
+
+        string[] files = Directory.GetFiles(fullpath, "*.*", SearchOption.AllDirectories);
+        for(int i = 0; i < files.Length; i++) {
+            progress = (int)((100 / (float)files.Length) * (i + 1));
+            string file = files[i].Replace(fullpath,"");
+            OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Deleting, progress = progress});
+            try{
+                File.Delete(files[i]);
+            }catch{
+                OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Failed, progress = progress});
+            }
+        }
+        string[] paths = Directory.GetDirectories(fullpath, "*.*", SearchOption.AllDirectories);
+        for(int i = 0; i < paths.Length; i++) {
+            progress = (int)((100 / (float)paths.Length) * (i + 1));
+            string file = paths[i].Replace(Path.GetFullPath(PATH),"");
+            OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Deleting, progress = progress});
+            try{
+                Directory.Delete(paths[i]);
+            }catch{
+                OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Failed, progress = progress});
+            }
+        }
+        OnCleanCompleted?.Invoke();
+    }
+
     public static async Task UpdateFilesAsync(string PATH, string URL){
         pathFiles = Path.GetFullPath(PATH).Replace("\\","/") + "/";
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
