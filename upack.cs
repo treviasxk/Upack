@@ -38,7 +38,7 @@ public class Upack{
     
     static string pathFiles;
 
-    public static void CreateManifest(string PathFiles, UpackManifest manifest){
+    public static void CreateManifest(string PathFiles, UpackManifest manifest, string LocationSave = ""){
         string fullpath =  Path.GetFullPath(PathFiles) + "\\";
         PathFiles = PathFiles.Replace(Path.GetDirectoryName(fullpath) + "\\","");
 
@@ -62,7 +62,7 @@ public class Upack{
         foreach (string file in files) {
             data += CalculateMD5(file) + "\n";
         }
-        File.WriteAllText("Manifest.upack", Convert.ToBase64String(Encoding.ASCII.GetBytes(data)), Encoding.ASCII);
+        File.WriteAllText(LocationSave != "" ? LocationSave : "Manifest.upack", Convert.ToBase64String(Encoding.ASCII.GetBytes(data)), Encoding.ASCII);
     }
 
     static UpackManifest MyManifest;
@@ -70,27 +70,28 @@ public class Upack{
         string fullpath =  Path.GetFullPath(PATH) + "\\";
         GC.Collect(); 
         GC.WaitForPendingFinalizers();
-
-        string[] files = Directory.GetFiles(fullpath, "*.*", SearchOption.AllDirectories);
-        for(int i = 0; i < files.Length; i++) {
-            progress = (int)((100 / (float)files.Length) * (i + 1));
-            string file = files[i].Replace(fullpath,"");
-            OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Deleting, progress = progress});
-            try{
-                File.Delete(files[i]);
-            }catch{
-                OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Failed, progress = progress});
+        if(Directory.Exists(PATH)){
+            string[] files = Directory.GetFiles(fullpath, "*.*", SearchOption.AllDirectories);
+            for(int i = 0; i < files.Length; i++) {
+                progress = (int)((100 / (float)files.Length) * (i + 1));
+                string file = files[i].Replace(fullpath,"");
+                OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Deleting, progress = progress});
+                try{
+                    File.Delete(files[i]);
+                }catch{
+                    OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Failed, progress = progress});
+                }
             }
-        }
-        string[] paths = Directory.GetDirectories(fullpath, "*.*", SearchOption.AllDirectories);
-        for(int i = 0; i < paths.Length; i++) {
-            progress = (int)((100 / (float)paths.Length) * (i + 1));
-            string file = paths[i].Replace(Path.GetFullPath(PATH),"");
-            OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Deleting, progress = progress});
-            try{
-                Directory.Delete(paths[i]);
-            }catch{
-                OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Failed, progress = progress});
+            string[] paths = Directory.GetDirectories(fullpath, "*.*", SearchOption.AllDirectories);
+            for(int i = 0; i < paths.Length; i++) {
+                progress = (int)((100 / (float)paths.Length) * (i + 1));
+                string file = paths[i].Replace(Path.GetFullPath(PATH),"");
+                OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Deleting, progress = progress});
+                try{
+                    Directory.Delete(paths[i]);
+                }catch{
+                    OnUpackStatus?.Invoke(new DownloadInfo {filename = file, Status = StatusFile.Failed, progress = progress});
+                }
             }
         }
         OnCleanCompleted?.Invoke();
