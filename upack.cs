@@ -51,16 +51,24 @@ public class Upack{
         data += "WebSite=" + manifest.WebSite + "\n";
         data += "UrlPath=" + manifest.UrlPath + "\n";
 
-        var files = Directory.GetFiles(fullpath, "*.*", SearchOption.AllDirectories);
+        var allFiles = Directory.GetFiles(fullpath, "*.*", SearchOption.AllDirectories);
+        List<string> filesNoHiden = new List<string>();
+        foreach (string file in allFiles) {
+            if(!new FileInfo(file).Attributes.HasFlag(FileAttributes.Hidden))
+                filesNoHiden.Add(file);
+        }
+        string[] files = filesNoHiden.ToArray();
         data += "TotalFiles=" + files.Count() + "\n";
         data += "\n";
         foreach (string file in files) {
-            data += Path.GetFullPath(file).Replace(fullpath,"").Replace("\\","/") + "\n";
+            if(!new FileInfo(file).Attributes.HasFlag(FileAttributes.Hidden))
+                data += Path.GetFullPath(file).Replace(fullpath,"").Replace("\\","/") + "\n";
         }
         data += "\n";
 
         foreach (string file in files) {
-            data += CalculateMD5(file) + "\n";
+            if(!new FileInfo(file).Attributes.HasFlag(FileAttributes.Hidden))
+                data += CalculateMD5(file) + "\n";
         }
         File.WriteAllText(LocationSave != "" ? LocationSave : "Manifest.upack", Convert.ToBase64String(Encoding.ASCII.GetBytes(data)), Encoding.ASCII);
     }
