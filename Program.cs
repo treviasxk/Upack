@@ -5,8 +5,8 @@
 Upack.OnUpackStatus = OnUpackStatus;
 Upack.OnUpdateCompleted = OnCompleted;
 Upack.OnErrorUpdate = OnError;
-Upack.ClearFiles(Environment.CurrentDirectory + "/AssetBundles");
-await Upack.UpdateFilesAsync(Environment.CurrentDirectory + "/AssetBundles", "http://192.168.0.101/data/builds/android.upack");
+//Upack.ClearFiles(Environment.CurrentDirectory + "/AssetBundles");
+await Upack.UpdateFilesAsync(Environment.CurrentDirectory + "/AssetBundles", "http://192.168.0.101/data/builds/WindowsEditor.upack");
 Console.ReadKey();
 
 /*

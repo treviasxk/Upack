@@ -149,6 +149,8 @@ public class Upack{
             if(File.Exists(pathFiles + files[i])){
                 if(CalculateMD5(pathFiles + files[i]) != md5[i]){
                     dwfile.Add(files[i], md5[i]);
+                }else{
+                    OnUpackStatus?.Invoke(new DownloadInfo {filename = files[i], Status = StatusFile.Updated, progress = progress});
                 }
             }else{
                 dwfile.Add(files[i], md5[i]);
