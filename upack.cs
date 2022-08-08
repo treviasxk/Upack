@@ -15,20 +15,9 @@ public class DownloadInfo{
     public string bytesReceived {get;set;}
     public int progress {get;set;}
 }
-public enum UpackStatus {Offline, Online, Maintenance};
-public class UpackManifest{
-    public string Name {get;set;}
-    public string Version {get;set;}
-    public string BuildVersion {get;set;}
-    public UpackStatus Status {get;set;}
-    public string Message {get;set;}
-    public string WebSite {get;set;}
-    public string UrlPath {get;set;}
-}
-
 public class Upack{
     public static Action<DownloadInfo> OnUpackStatus;
-    public static Action<UpackManifest> OnUpdateCompleted;
+    public static Action OnUpdateCompleted;
     public static Action OnErrorUpdate;
     public static Action OnCleanCompleted;
     static Dictionary<string, string> dwfile = new Dictionary<string, string>();
@@ -38,18 +27,12 @@ public class Upack{
     
     static string pathFiles;
 
-    public static void CreateManifest(string PathFiles, UpackManifest manifest, string LocationSave = ""){
+    public static void CreateManifest(string PathFiles, string UrlPath, string LocationSave = ""){
         string fullpath =  Path.GetFullPath(PathFiles) + "\\";
         PathFiles = PathFiles.Replace(Path.GetDirectoryName(fullpath) + "\\","");
 
         string data = "UPACK" + "\n";
-        data += "Name=" + manifest.Name + "\n";
-        data += "Version=" + manifest.Version + "\n";
-        data += "BuildVersion=" + manifest.BuildVersion + "\n";
-        data += "Status=" + Convert.ToInt32(manifest.Status) + "\n";
-        data += "Message=" + manifest.Message + "\n";
-        data += "WebSite=" + manifest.WebSite + "\n";
-        data += "UrlPath=" + manifest.UrlPath + "\n";
+        data += "UrlPath=" + UrlPath + "\n";
 
         var allFiles = Directory.GetFiles(fullpath, "*.*", SearchOption.AllDirectories);
         List<string> filesNoHiden = new List<string>();
@@ -73,7 +56,6 @@ public class Upack{
         File.WriteAllText(LocationSave != "" ? LocationSave : "Manifest.upack", Convert.ToBase64String(Encoding.ASCII.GetBytes(data)), Encoding.ASCII);
     }
 
-    static UpackManifest MyManifest;
     public static void ClearFiles(string PATH){
         string fullpath =  Path.GetFullPath(PATH) + "\\";
         GC.Collect(); 
@@ -105,6 +87,7 @@ public class Upack{
         OnCleanCompleted?.Invoke();
     }
 
+    static string MyUrlPath = "";
     public static async Task UpdateFilesAsync(string PATH, string URL){
         pathFiles = Path.GetFullPath(PATH).Replace("\\","/") + "/";
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -115,24 +98,17 @@ public class Upack{
             string data = await webClient.GetStringAsync(URL);
             string[] result = Encoding.ASCII.GetString(Convert.FromBase64String(data)).Split(new string[] {"\n"}, StringSplitOptions.None);
             if(result[0] == "UPACK"){
-                MyManifest = new UpackManifest();
-                MyManifest.Name = result[1].Replace("Name=","");
-                MyManifest.Version = result[2].Replace("Version=","");
-                MyManifest.BuildVersion = result[3].Replace("BuildVersion=","");
-                MyManifest.Status = (UpackStatus)Convert.ToInt32(result[4].Replace("Status=",""));
-                MyManifest.Message = result[5].Replace("Message=","");
-                MyManifest.WebSite = result[6].Replace("WebSite=","");
-                MyManifest.UrlPath = result[7].Replace("UrlPath=","");
+                MyUrlPath = result[1].Replace("UrlPath=","");
 
-                if(!MyManifest.UrlPath.EndsWith("/"))
-                    MyManifest.UrlPath += "/";
+                if(!MyUrlPath.EndsWith("/"))
+                    MyUrlPath += "/";
                 
-                int TotalFiles = Convert.ToInt32(result[8].Replace("TotalFiles=",""));
+                int TotalFiles = Convert.ToInt32(result[2].Replace("TotalFiles=",""));
                 string[] files = new string[TotalFiles];
                 string[] md5 = new string[TotalFiles];
 
-                files =  result.Skip(10).ToArray().Take(TotalFiles).ToArray();
-                md5 =  result.Skip(11 + TotalFiles).ToArray();
+                files = result.Skip(4).ToArray().Take(TotalFiles).ToArray();
+                md5 =  result.Skip(5 + TotalFiles).ToArray();
                 await CheckFilesAsync(files,md5);
             }else{
                 OnErrorUpdate?.Invoke();
@@ -162,10 +138,11 @@ public class Upack{
     static async Task DownloadFileAsync(){
         bool pass = true;
         for(int i = 0; i < dwfile.Count; i++){
-            string _url = MyManifest.UrlPath + dwfile.ElementAt(i).Key;
+            string _url = MyUrlPath + dwfile.ElementAt(i).Key;
             string _location = pathFiles + dwfile.ElementAt(i).Key;
             new FileInfo(_location).Directory.Create();
             try{
+                webClient = new HttpClient();
                 var response = await webClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
                 var size = response.Content.Headers.ContentLength;
                 response.EnsureSuccessStatusCode();
@@ -211,7 +188,7 @@ public class Upack{
         if(!pass)
             OnErrorUpdate?.Invoke();
         else
-            OnUpdateCompleted?.Invoke(MyManifest);
+            OnUpdateCompleted?.Invoke();
     }
 
     static MD5 md5 = MD5.Create();

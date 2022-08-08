@@ -185,11 +185,11 @@
   "project": {
     "version": "1.0.1.3",
     "restore": {
-      "projectUniqueName": "C:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
+      "projectUniqueName": "c:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
       "projectName": "Upack",
-      "projectPath": "C:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
+      "projectPath": "c:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
       "packagesPath": "C:\\Users\\trevi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\obj\\",
+      "outputPath": "c:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\trevi\\AppData\\Roaming\\NuGet\\NuGet.Config"
