@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "90yD5WpaCBe61X8VRM/wrzUCRaN12N5QQTy8t7hvUijKBD9Bi3lLmA+svvtxYqBHUckooT0lniP+dvU/phnxdQ==",
+  "dgSpecHash": "SMukHVWfjbJzdzaKpI9mCQ3m2CGzNg32OOKTRQGXxWHcGeOIh4Lm6uo/yrWchbKk0I3GSX8DcAV2LlBu3JTkcA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\trevi\\OneDrive\\Documentos\\Github\\Upack\\Upack.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\trevi\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
-    "C:\\Users\\trevi\\.nuget\\packages\\netstandard.library\\2.0.3\\netstandard.library.2.0.3.nupkg.sha512"
-  ],
+  "projectFilePath": "c:\\Users\\trevi\\Documents\\Github\\Upack\\Upack.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }

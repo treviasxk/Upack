@@ -6,12 +6,12 @@ Upack.OnUpackStatus = OnUpackStatus;
 Upack.OnUpdateCompleted = OnCompleted;
 Upack.OnErrorUpdate = OnError;
 //Upack.ClearFiles(Environment.CurrentDirectory + "/AssetBundles");
-await Upack.UpdateFilesAsync(Environment.CurrentDirectory + "/AssetBundles", "http://192.168.0.101/data/builds/WindowsEditor.upack");
-Console.ReadKey();
+await Upack.UpdateFilesAsync("android", "http://localhost/data/builds/Manifest.upack");
 
-/*
-Upack.CreateManifest("AssetBundles", "http://192.168.0.101/data/builds/android");
-Console.ReadKey();*/
+
+//Upack.CreateManifest("android", "http://localhost/data/builds/android");
+
+Console.ReadKey();
 void OnError(){
     Console.WriteLine("Error!");
 }

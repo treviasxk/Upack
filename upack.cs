@@ -3,6 +3,7 @@
 // Github:              https://github.com/treviasxk
 
 using System.Net;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -139,45 +140,72 @@ public class Upack{
         bool pass = true;
         for(int i = 0; i < dwfile.Count; i++){
             string _url = MyUrlPath + dwfile.ElementAt(i).Key;
-            string _location = pathFiles + dwfile.ElementAt(i).Key;
-            new FileInfo(_location).Directory.Create();
+            string _file = pathFiles + dwfile.ElementAt(i).Key;
+            new FileInfo(_file).Directory.Create();
             try{
-                webClient = new HttpClient();
+
+                // Get content info download
+                HttpClient webClient = new HttpClient(new HttpClientHandler(){SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13});
                 var response = await webClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
-                var size = response.Content.Headers.ContentLength;
-                response.EnsureSuccessStatusCode();
-                var contentStream = await response.Content.ReadAsStreamAsync();
-                var buffer = new byte[(int)size];
-                int totalBytes = 0;
+                long? size = response.Content.Headers.ContentLength;
 
-                GC.Collect(); 
+                GC.Collect();
                 GC.WaitForPendingFinalizers();
-                if(File.Exists(_location))
-                    if(new FileInfo(_location).Length - 1 >= size)
-                        File.Delete(_location);
 
-                using(var fileStream = new FileStream(_location, FileMode.Create, FileAccess.ReadWrite, FileShare.None, buffer.Length, true)){
-                    do{
-                        float x = (100 / (float)dwfile.Count);
-                        progress = (int)((x / (float)size) * totalBytes) + (int)((i + 1) * x);
-                        if(time != DateTime.Now.Second){
-                            time = DateTime.Now.Second;
-                            speed = totalBytes - speed;
-                        }
-                        OnUpackStatus?.Invoke(new DownloadInfo {speedDownload = GetSizeShow(speed), filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Downloading, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
-                        var bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length);
-                        if(bytesRead == 0)
-                            continue;
-                        await fileStream.WriteAsync(buffer, 0, bytesRead);
-                        totalBytes += bytesRead;
+
+                // Check resume download
+                bool acceptRanges = response.Headers.AcceptRanges.Contains("bytes");
+                if(!acceptRanges)
+                    File.Delete(_file);
+
+                int totalBytes = 0, totalBytesTmp = 0;
+
+                // Read and Write file
+                using(FileStream fileStream = new FileStream(_file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None)){
+                    // Get file size
+                    long skip = fileStream.Length;
+
+                    float x = (100 / (float)dwfile.Count);
+                    progress = (int)((x / (float)size) * totalBytes) + (int)((i + 1) * x);
+
+                    OnUpackStatus?.Invoke(new DownloadInfo {speedDownload = GetSizeShow(0), filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Downloading, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
+
+                    // Resume download
+                    if(acceptRanges){
+                        webClient.DefaultRequestHeaders.Add("Range", "bytes=" + skip + "-");
+                        response = await webClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
                     }
-                    while (totalBytes < size);
+
+                    // Get file size download
+                    long? sizePart = response.Content.Headers.ContentLength;
+                    using(var stream = response.Content.ReadAsStream()){
+                        var buffer = new byte[Convert.ToInt64(sizePart)];
+                        fileStream.Seek(skip, SeekOrigin.Current);
+                        while(fileStream.Length < sizePart + skip){
+                            if(time != DateTime.Now.Second) {
+                                time = DateTime.Now.Second;
+                                speed = totalBytes - totalBytesTmp;
+                                totalBytesTmp = totalBytes;
+                            }
+
+                            int bytesRead = 0;
+                            bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length > 32768 ? 32768 : buffer.Length);
+                            if(bytesRead == 0)
+                                continue;
+                            totalBytes += bytesRead;
+                            await fileStream.WriteAsync(buffer, 0, bytesRead);
+                            OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key,  progress = progress, Status = StatusFile.Downloading, speedDownload = GetSizeShow(speed), bytesReceived = GetSizeShow(totalBytes), totalBytes = GetSizeShow((int)size)});
+                        }
+                    }
+                    fileStream.Close();
                 }
-                if(CalculateMD5(_location) == dwfile.ElementAt(i).Value){
+
+                if(CalculateMD5(_file) == dwfile.ElementAt(i).Value){
                     OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, progress = progress, Status = StatusFile.Updated, bytesReceived = GetSizeShow(totalBytes), totalBytes =  GetSizeShow((int)size)});
                 }else{
                     pass = false;
                     OnUpackStatus?.Invoke(new DownloadInfo {filename = dwfile.ElementAt(i).Key, Status = StatusFile.Failed});
+
                 }
             }catch{
                 pass = false;
